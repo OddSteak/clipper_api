@@ -1,0 +1,6 @@
+- users - id and pass
+- link collections - collection id, creator id, collection name, access attr
+- collection_users - user id, collection id
+- links - link id, collection id, link name, url, date added, type
+- categories - link id, category
+- tags - link id, tag name
