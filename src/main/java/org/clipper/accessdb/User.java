@@ -1,42 +1,39 @@
 package org.clipper.accessdb;
 
+import java.util.List;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
+import jakarta.persistence.Table;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 
 @Entity
+@Table(name = "user")
 public class User {
     @Id
-    @GeneratedValue(strategy=GenerationType.AUTO)
-    private Integer id;
+    private String id;
 
-    private String name;
+    @OneToMany(mappedBy = "creator_id")
+    List<Collection> collections;
 
-    private String email;
+    @OneToMany(mappedBy = "user_id")
+    List<CollectionUsers> accessCollections;
 
-    public Integer getId() {
+    private String pass;
+
+    public String getId() {
         return id;
     }
 
-    public void setId(Integer id) {
+    public void setId(String id) {
         this.id = id;
     }
 
-    public String getName() {
-        return name;
-    }
+	public String getPass() {
+		return pass;
+	}
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
+	public void setPass(String pass) {
+		this.pass = pass;
+	}
 }
 
