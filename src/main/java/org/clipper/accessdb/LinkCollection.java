@@ -1,7 +1,5 @@
 package org.clipper.accessdb;
 
-import java.util.List;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -11,7 +9,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.JoinColumn;
 
 enum colAccess {
@@ -22,7 +19,7 @@ enum colAccess {
 
 @Entity
 @Table(name = "collection")
-public class Collection {
+public class LinkCollection {
     @Id
     @GeneratedValue(strategy=GenerationType.AUTO)
     @Column(name = "id")
@@ -30,7 +27,7 @@ public class Collection {
 
 	@ManyToOne
     @JoinColumn(name = "creator_id",  referencedColumnName = "id")
-    private User creator_id;
+    private User creatorId;
 
 	@Column(name = "name")
     private String name;
@@ -39,19 +36,13 @@ public class Collection {
     @Column(name = "access")
     private colAccess access;
 
-    @OneToMany(mappedBy = "col_id")
-    List<CollectionUsers> access_users;
+    LinkCollection() {}
 
-    @OneToMany(mappedBy = "col_id")
-    List<Links> links;
-
-    public List<Links> getLinks() {
-		return links;
-	}
-
-	public void setLinks(List<Links> links) {
-		this.links = links;
-	}
+    public LinkCollection(User creatorId, String name, colAccess access) {
+        this.creatorId = creatorId;
+        this.name = name;
+        this.access = access;
+    }
 
 	public Integer getId() {
 		return id;
@@ -62,11 +53,11 @@ public class Collection {
 	}
 
     public User getCreator() {
-		return creator_id;
+		return creatorId;
 	}
 
 	public void setCreator(User creator) {
-		this.creator_id = creator;
+		this.creatorId = creator;
 	}
 
 
@@ -83,7 +74,7 @@ public class Collection {
 		return access;
 	}
 
-	public void addAccess(colAccess access) {
+	public void setAccess(colAccess access) {
 		this.access = access;
 	}
 }

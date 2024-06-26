@@ -10,25 +10,25 @@ import jakarta.persistence.Table;
 @IdClass(CollectionUsersId.class)
 public class CollectionUsers {
     @Id
-    private User user_id;
+    private User userId;
 
     @Id
-    private Collection col_id;
+    private LinkCollection colId;
 
     public User getUserId() {
-		return user_id;
+		return userId;
 	}
 
 	public void setUserId(User userId) {
-		this.user_id.setId(userId.getId());
+		this.userId.setId(userId.getId());
 	}
 
-	public Collection getCollection() {
-		return col_id;
+	public LinkCollection getCollection() {
+		return colId;
 	}
 
-	public void setCollection(Collection collection) {
-		this.col_id.setId(collection.getId());
+	public void setCollection(LinkCollection collection) {
+		this.colId.setId(collection.getId());
 	}
 }
 

@@ -3,15 +3,24 @@ package org.clipper.accessdb;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
+import jakarta.persistence.Table;
 
 @Entity
+@Table(name = "category")
 @IdClass(CategoryId.class)
 public class Category {
     @Id
     private String category;
 
 	@Id
-    private Links link_id;
+    private Link linkId;
+
+    public Category(Link linkId, String category) {
+        this.linkId = linkId;
+        this.category = category;
+    }
+
+    public Category() {}
 
     public String getCategory() {
 		return category;
@@ -21,11 +30,15 @@ public class Category {
 		this.category = category;
 	}
 
-	public Links getLink_id() {
-		return link_id;
+	public Link getLinkId() {
+		return linkId;
 	}
 
-	public void setLink_id(Links link_id) {
-		this.link_id = link_id;
+	public void setLinkId(Link link_id) {
+		this.linkId = link_id;
 	}
+
+    public String toString() {
+        return String.format("[%s - %s]", category, linkId.getId());
+    }
 }

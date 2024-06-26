@@ -1,17 +1,28 @@
 package org.clipper.accessdb;
 
 import java.io.Serializable;
-import java.util.Objects;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 
 public class CategoryId implements Serializable {
+    @Id
+    @Column(name = "category")
     private String category;
 
+    @Id
     @ManyToOne
     @JoinColumn(name = "link_id", referencedColumnName = "id")
-    private Links link_id;
+    private Link linkId;
+
+    public CategoryId(Link linkId, String category) {
+        this.linkId = linkId;
+        this.category = category;
+    }
+
+    public CategoryId() {}
 
     public String getCategory() {
 		return category;
@@ -21,30 +32,47 @@ public class CategoryId implements Serializable {
 		this.category = category;
 	}
 
-    public void setLink_id(Links link_id) {
-		this.link_id = link_id;
+    public void setLinkId(Link link_id) {
+		this.linkId = link_id;
 	}
 
-	public Links getLink_id() {
-		return link_id;
+	public Link getLinkId() {
+		return linkId;
 	}
 
-    public CategoryId(String cat, Links linkId) {
+    public CategoryId(String cat, Link linkId) {
         this.category = cat;
-        this.link_id = linkId;
-    }
-
-	@Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        CategoryId catId1 = (CategoryId) o;
-        return Objects.equals(category, catId1.category) &&
-               Objects.equals(link_id, catId1.link_id);
+        this.linkId = linkId;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(category, link_id);
+        final int prime = 31;
+        int result = 1;
+        result = prime * (result + ((category == null) ? 0 : category.hashCode()));
+        result = prime * (result + ((linkId == null) ? 0 : linkId.hashCode()));
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        CategoryId other = (CategoryId) obj;
+        if (category == null) {
+            if (other.category != null)
+                return false;
+        } else if (!category.equals(other.category))
+            return false;
+        if (linkId == null) {
+            if (other.linkId != null)
+                return false;
+        } else if (!linkId.equals(other.linkId))
+            return false;
+        return true;
     }
 }

@@ -11,10 +11,36 @@ import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "links")
-public class Links {
+public class Link {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Integer id;
+
+	@ManyToOne
+    @JoinColumn(name = "col_id", referencedColumnName = "id" )
+    private LinkCollection colId;
+
+	@Column(name = "name")
+    private String name;
+
+	@Column(name = "url")
+    private String url;
+
+	@Column(name = "date")
+    private String date;
+
+	@Column(name = "type")
+    private String type;
+
+    Link() {}
+
+    Link(LinkCollection colId, String name, String url, String date, String type) {
+        this.colId = colId;
+        this.name = name;
+        this.url = url;
+        this.date = date;
+        this.type = type;
+    }
 
     public Integer getId() {
 		return id;
@@ -24,20 +50,13 @@ public class Links {
 		this.id = id;
 	}
 
-	@ManyToOne
-    @JoinColumn(name = "col_id", referencedColumnName = "id" )
-    private Collection col_id;
-
-    public Collection getCol_id() {
-		return col_id;
+    public LinkCollection getColId() {
+		return colId;
 	}
 
-	public void setCol_id(Collection col_id) {
-		this.col_id = col_id;
+	public void setColId(LinkCollection col_id) {
+		this.colId = col_id;
 	}
-
-	@Column(name = "name")
-    private String name;
 
     public String getName() {
 		return name;
@@ -47,9 +66,6 @@ public class Links {
 		this.name = name;
 	}
 
-	@Column(name = "url")
-    private String url;
-
     public String getUrl() {
 		return url;
 	}
@@ -58,9 +74,6 @@ public class Links {
 		this.url = url;
 	}
 
-	@Column(name = "date")
-    private String date;
-
     public String getDate() {
 		return date;
 	}
@@ -68,9 +81,6 @@ public class Links {
 	public void setDate(String date) {
 		this.date = date;
 	}
-
-	@Column(name = "type")
-    private String type;
 
 	public String getType() {
 		return type;

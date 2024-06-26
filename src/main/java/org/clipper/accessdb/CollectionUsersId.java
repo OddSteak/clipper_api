@@ -1,47 +1,73 @@
 package org.clipper.accessdb;
 
 import java.io.Serializable;
-import java.util.Objects;
 
+import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 
 public class CollectionUsersId implements Serializable {
+    @Id
     @ManyToOne
     @JoinColumn(name = "user_id", referencedColumnName = "id")
-    private User user_id;
+    private User userId;
 
+    @Id
     @ManyToOne
     @JoinColumn(name = "col_id", referencedColumnName = "id")
-    private Collection col_id;
+    private LinkCollection colId;
 
-    public User getUser_id() {
-		return user_id;
-	}
+    public CollectionUsersId() {}
 
-	public void setUser_id(User user_id) {
-		this.user_id = user_id;
-	}
-
-    public Collection getCol_id() {
-		return col_id;
-	}
-
-	public void setCol_id(Collection col_id) {
-		this.col_id = col_id;
-	}
-
-	@Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        CollectionUsersId colId1 = (CollectionUsersId) o;
-        return Objects.equals(colId1.user_id, user_id) &&
-               Objects.equals(colId1.col_id, col_id);
+    public CollectionUsersId(User user_id, LinkCollection col_id) {
+        this.userId = user_id;
+        this.colId = col_id;
     }
+
+    public User getUserId() {
+		return userId;
+	}
+
+	public void setUserId(User user_id) {
+		this.userId = user_id;
+	}
+
+    public LinkCollection getColId() {
+		return colId;
+	}
+
+	public void setColId(LinkCollection col_id) {
+		this.colId = col_id;
+	}
 
     @Override
     public int hashCode() {
-        return Objects.hash(user_id, col_id);
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((userId == null) ? 0 : userId.hashCode());
+        result = prime * result + ((colId == null) ? 0 : colId.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        CollectionUsersId other = (CollectionUsersId) obj;
+        if (userId == null) {
+            if (other.userId != null)
+                return false;
+        } else if (!userId.equals(other.userId))
+            return false;
+        if (colId == null) {
+            if (other.colId != null)
+                return false;
+        } else if (!colId.equals(other.colId))
+            return false;
+        return true;
     }
 }
