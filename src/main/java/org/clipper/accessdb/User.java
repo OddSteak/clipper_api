@@ -12,6 +12,13 @@ public class User {
 
     private String pass;
 
+    public User(String id, String pass) {
+        this.id = id;
+        this.pass = pass;
+    }
+
+    public User() {}
+
     public String getId() {
         return id;
     }

@@ -15,6 +15,13 @@ public class CollectionUsers {
     @Id
     private LinkCollection colId;
 
+    public CollectionUsers(User userId, LinkCollection colId) {
+        this.userId = userId;
+        this.colId = colId;
+    }
+
+    public CollectionUsers() {}
+
     public User getUserId() {
 		return userId;
 	}

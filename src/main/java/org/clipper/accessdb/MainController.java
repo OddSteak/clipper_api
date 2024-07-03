@@ -3,14 +3,20 @@ package org.clipper.accessdb;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
 
-@Controller // This means that this class is a Controller
+import jakarta.servlet.http.HttpServletRequest;
+
+@RestController // This means that this class is a Controller
 @RequestMapping(path = "/api") // This means URL's start with /demo (after Application path)
 public class MainController {
     @Autowired // This means to get the bean called userRepository
@@ -29,28 +35,46 @@ public class MainController {
     @Autowired
     private CategoryRepository categoryRepository;
 
+    /* @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    @ResponseBody ErrorInfo conflict(HttpServletRequest req, Exception ex) {
+        return new ErrorInfo(req.getRequestURI(), ex);
+    } */
+
     @PostMapping(path = "/adduser") // Map ONLY POST Requests
     public @ResponseBody String addNewUser(@RequestParam String name, @RequestParam String pass) {
         // @ResponseBody means the returned String is the response, not a view name
         // @RequestParam means it is a parameter from the GET or POST request
 
-        User n = new User();
-        n.setId(name);
-        n.setPass(pass);
+        User n = new User(name, pass);
         userRepository.save(n);
         return "Saved";
     }
 
     @GetMapping(path = "/isuser")
     public @ResponseBody String isUser(@RequestParam String name) {
-        var u = userRepository.findById(name);
-        return Boolean.toString(u.isPresent());
+        return Boolean.toString(userRepository.existsById(name));
     }
 
-    @GetMapping(path = "/all")
+    @GetMapping(path = "/allusers")
     public @ResponseBody Iterable<User> getAllUsers() {
         // This returns a JSON or XML with the users
         return userRepository.findAll();
+    }
+
+    @GetMapping(path = "/getowncollections")
+    public @ResponseBody Iterable<LinkCollection> getPvtCollections(@RequestParam String username) {
+        var u = userRepository.findById(username);
+        if (!u.isPresent()) throw new GenericNotFoundException(String.format("user '%s' doesn't exist", username));
+        return collectionRepository.findByCreatorId(u.get());
+    }
+
+    @GetMapping(path = "/getothercollections")
+    public @ResponseBody Iterable<LinkCollection> getAllCollections(@RequestParam String username) {
+        var u = userRepository.findById(username);
+        if (!u.isPresent()) throw new GenericNotFoundException("user doesn't exist");
+
+        return collectionUsersRepository.findByUserId(u.get());
     }
 
     @PostMapping(path = "/addcollection")
@@ -58,8 +82,7 @@ public class MainController {
         Optional<User> u = userRepository.findById(user_id);
         colAccess acc;
 
-        if (!u.isPresent())
-            return "Invalid user id";
+        if (!u.isPresent()) throw new GenericNotFoundException(String.format("user '%s' doesn't exist", user_id));
         try {
             acc = colAccess.valueOf(access);
         } catch (IllegalArgumentException e) {
@@ -68,29 +91,55 @@ public class MainController {
 
         LinkCollection col = new LinkCollection(u.get(), name, acc);
         collectionRepository.save(col);
+        collectionUsersRepository.save(new CollectionUsers(u.get(), col));
         return "Saved";
+    }
+
+    @PostMapping(path = "/addaccess")
+    public @ResponseBody String addNewUserAccess(@RequestParam Integer colId, @RequestParam String username) {
+        var c = collectionRepository.findById(colId);
+        var u = userRepository.findById(username);
+
+        if (!c.isPresent() || !u.isPresent())
+            throw new GenericNotFoundException("user or collection doesn't exist");
+
+        var coluser = new CollectionUsers(u.get(), c.get());
+        collectionUsersRepository.save(coluser);
+        return "Success";
     }
 
     @PostMapping(path = "/addlink")
     public @ResponseBody String addNewLink(@RequestParam Integer colId, @RequestParam String name,
             @RequestParam String url, @RequestParam String date, @RequestParam String type,
-            @RequestParam String category) {
+            @RequestParam Optional<String> category) {
         var col = collectionRepository.findById(colId);
         if (!col.isPresent())
-            return "collection doesn't exist";
+            throw new GenericNotFoundException("collection doesn't exist");
 
         Link link = new Link(col.get(), name, url, date, type);
         linksRepository.save(link);
-        var cat = new Category(link, category);
-        categoryRepository.save(cat);
+        if (category.isPresent()) {
+            var cat = new Category(link, category.get());
+            categoryRepository.save(cat);
+        }
 
+        return "Saved";
+    }
+
+    @PostMapping(path = "/addcategory")
+    public @ResponseBody String addNewCategory(@RequestParam Integer linkId, String category) {
+        var link = linksRepository.findById(linkId);
+        if (!link.isPresent()) throw new GenericNotFoundException("link doesn't exist");
+
+        categoryRepository.save(new Category(link.get(), category));
         return "Saved";
     }
 
     @GetMapping(path = "/getlinks")
     public @ResponseBody Iterable<Link> getLinks(@RequestParam Integer colId) {
         var col = collectionRepository.findById(colId);
-        if (!col.isPresent()) return null;
+        if (!col.isPresent())
+            throw new GenericNotFoundException("Collection doesn't exist");
         return linksRepository.findByColId(col.get());
     }
 }
