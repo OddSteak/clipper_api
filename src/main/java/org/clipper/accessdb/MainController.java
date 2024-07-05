@@ -2,19 +2,25 @@ package org.clipper.accessdb;
 
 import java.util.Optional;
 
+import org.clipper.websecurity.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import jakarta.servlet.http.HttpServletRequest;
 
 @RestController // This means that this class is a Controller
 @RequestMapping(path = "/api") // This means URL's start with /demo (after Application path)
@@ -35,11 +41,24 @@ public class MainController {
     @Autowired
     private CategoryRepository categoryRepository;
 
-    /* @ResponseStatus(HttpStatus.BAD_REQUEST)
-    @ExceptionHandler(DataIntegrityViolationException.class)
-    @ResponseBody ErrorInfo conflict(HttpServletRequest req, Exception ex) {
-        return new ErrorInfo(req.getRequestURI(), ex);
-    } */
+    @Autowired
+    private AuthenticationManager authenticationManager;
+
+    @Autowired
+    private UserDetailsServiceImpl userDetailsServiceImpl;
+
+    @Autowired
+    private JwtUtil jwtUtil;
+
+    /*
+     * @ResponseStatus(HttpStatus.BAD_REQUEST)
+     *
+     * @ExceptionHandler(DataIntegrityViolationException.class)
+     *
+     * @ResponseBody ErrorInfo conflict(HttpServletRequest req, Exception ex) {
+     * return new ErrorInfo(req.getRequestURI(), ex);
+     * }
+     */
 
     @PostMapping(path = "/adduser") // Map ONLY POST Requests
     public @ResponseBody String addNewUser(@RequestParam String name, @RequestParam String pass) {
@@ -65,14 +84,16 @@ public class MainController {
     @GetMapping(path = "/getowncollections")
     public @ResponseBody Iterable<LinkCollection> getPvtCollections(@RequestParam String username) {
         var u = userRepository.findById(username);
-        if (!u.isPresent()) throw new GenericNotFoundException(String.format("user '%s' doesn't exist", username));
+        if (!u.isPresent())
+            throw new GenericNotFoundException(String.format("user '%s' doesn't exist", username));
         return collectionRepository.findByCreatorId(u.get());
     }
 
     @GetMapping(path = "/getothercollections")
     public @ResponseBody Iterable<LinkCollection> getAllCollections(@RequestParam String username) {
         var u = userRepository.findById(username);
-        if (!u.isPresent()) throw new GenericNotFoundException("user doesn't exist");
+        if (!u.isPresent())
+            throw new GenericNotFoundException("user doesn't exist");
 
         return collectionUsersRepository.findByUserId(u.get());
     }
@@ -82,7 +103,8 @@ public class MainController {
         Optional<User> u = userRepository.findById(user_id);
         colAccess acc;
 
-        if (!u.isPresent()) throw new GenericNotFoundException(String.format("user '%s' doesn't exist", user_id));
+        if (!u.isPresent())
+            throw new GenericNotFoundException(String.format("user '%s' doesn't exist", user_id));
         try {
             acc = colAccess.valueOf(access);
         } catch (IllegalArgumentException e) {
@@ -129,7 +151,8 @@ public class MainController {
     @PostMapping(path = "/addcategory")
     public @ResponseBody String addNewCategory(@RequestParam Integer linkId, String category) {
         var link = linksRepository.findById(linkId);
-        if (!link.isPresent()) throw new GenericNotFoundException("link doesn't exist");
+        if (!link.isPresent())
+            throw new GenericNotFoundException("link doesn't exist");
 
         categoryRepository.save(new Category(link.get(), category));
         return "Saved";
@@ -142,4 +165,25 @@ public class MainController {
             throw new GenericNotFoundException("Collection doesn't exist");
         return linksRepository.findByColId(col.get());
     }
+
+    @PostMapping(path = "/auth")
+    public ResponseEntity<?> createAuthenticationToken(@RequestBody AuthRequest authRequest)
+      throws Exception {
+        try {
+            authenticationManager.authenticate(
+                // standard token spring mvc uses for username and password
+                new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword())
+            );
+        } catch (BadCredentialsException e) {
+            throw new Exception("incorrect username or password", e);
+        }
+
+        final UserDetails userDetails = userDetailsServiceImpl
+                .loadUserByUsername(authRequest.getUsername());
+
+        final String jwt = jwtUtil.generateToken(userDetails);
+
+        return ResponseEntity.ok(new AuthResponse(jwt));
+    }
 }
+
