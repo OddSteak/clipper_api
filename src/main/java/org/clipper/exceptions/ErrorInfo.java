@@ -1,4 +1,4 @@
-package org.clipper.accessdb;
+package org.clipper.exceptions;
 
 public class ErrorInfo {
     public final String url;

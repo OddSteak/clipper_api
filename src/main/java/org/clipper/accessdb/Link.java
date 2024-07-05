@@ -32,9 +32,9 @@ public class Link {
 	@Column(name = "type")
     private String type;
 
-    Link() {}
+    public Link() {}
 
-    Link(LinkCollection colId, String name, String url, String date, String type) {
+    public Link(LinkCollection colId, String name, String url, String date, String type) {
         this.colId = colId;
         this.name = name;
         this.url = url;

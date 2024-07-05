@@ -1,4 +1,4 @@
-package org.clipper.accessdb;
+package org.clipper.models;
 
 public class AuthResponse {
     private String jwt;

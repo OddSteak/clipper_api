@@ -1,24 +1,15 @@
-package org.clipper.accessdb;
+package org.clipper.controllers;
 
 import java.util.Optional;
 
-import org.clipper.websecurity.*;
+import org.clipper.accessdb.*;
+import org.clipper.exceptions.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 
@@ -40,15 +31,6 @@ public class MainController {
 
     @Autowired
     private CategoryRepository categoryRepository;
-
-    @Autowired
-    private AuthenticationManager authenticationManager;
-
-    @Autowired
-    private UserDetailsServiceImpl userDetailsServiceImpl;
-
-    @Autowired
-    private JwtUtil jwtUtil;
 
     /*
      * @ResponseStatus(HttpStatus.BAD_REQUEST)
@@ -101,12 +83,12 @@ public class MainController {
     @PostMapping(path = "/addcollection")
     public @ResponseBody String addNewCollection(@RequestParam String name, String user_id, String access) {
         Optional<User> u = userRepository.findById(user_id);
-        colAccess acc;
+        ColAccess acc;
 
         if (!u.isPresent())
             throw new GenericNotFoundException(String.format("user '%s' doesn't exist", user_id));
         try {
-            acc = colAccess.valueOf(access);
+            acc = ColAccess.valueOf(access);
         } catch (IllegalArgumentException e) {
             return "invalid access modifier";
         }
@@ -166,24 +148,5 @@ public class MainController {
         return linksRepository.findByColId(col.get());
     }
 
-    @PostMapping(path = "/auth")
-    public ResponseEntity<?> createAuthenticationToken(@RequestBody AuthRequest authRequest)
-      throws Exception {
-        try {
-            authenticationManager.authenticate(
-                // standard token spring mvc uses for username and password
-                new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword())
-            );
-        } catch (BadCredentialsException e) {
-            throw new Exception("incorrect username or password", e);
-        }
-
-        final UserDetails userDetails = userDetailsServiceImpl
-                .loadUserByUsername(authRequest.getUsername());
-
-        final String jwt = jwtUtil.generateToken(userDetails);
-
-        return ResponseEntity.ok(new AuthResponse(jwt));
-    }
 }
 

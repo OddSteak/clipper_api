@@ -11,12 +11,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.JoinColumn;
 
-enum colAccess {
-    PVT,
-    SHARED,
-    PUBLIC
-}
-
 @Entity
 @Table(name = "collection")
 public class LinkCollection {
@@ -34,11 +28,11 @@ public class LinkCollection {
 
 	@Enumerated(EnumType.ORDINAL)
     @Column(name = "access")
-    private colAccess access;
+    private ColAccess access;
 
     LinkCollection() {}
 
-    public LinkCollection(User creatorId, String name, colAccess access) {
+    public LinkCollection(User creatorId, String name, ColAccess access) {
         this.creatorId = creatorId;
         this.name = name;
         this.access = access;
@@ -70,11 +64,11 @@ public class LinkCollection {
 	}
 
 
-	public colAccess getAccess() {
+	public ColAccess getAccess() {
 		return access;
 	}
 
-	public void setAccess(colAccess access) {
+	public void setAccess(ColAccess access) {
 		this.access = access;
 	}
 }
