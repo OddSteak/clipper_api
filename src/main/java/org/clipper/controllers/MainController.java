@@ -4,14 +4,16 @@ import java.util.Optional;
 
 import org.clipper.accessdb.*;
 import org.clipper.exceptions.*;
+import org.clipper.websecurity.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
-
 
 @RestController // This means that this class is a Controller
 @RequestMapping(path = "/api") // This means URL's start with /demo (after Application path)
@@ -63,8 +65,10 @@ public class MainController {
         return userRepository.findAll();
     }
 
-    @GetMapping(path = "/getowncollections")
-    public @ResponseBody Iterable<LinkCollection> getPvtCollections(@RequestParam String username) {
+    @GetMapping(path = "/getpvtcollections")
+    public @ResponseBody Iterable<LinkCollection> getPvtCollections() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
         var u = userRepository.findById(username);
         if (!u.isPresent())
             throw new GenericNotFoundException(String.format("user '%s' doesn't exist", username));
@@ -147,6 +151,5 @@ public class MainController {
             throw new GenericNotFoundException("Collection doesn't exist");
         return linksRepository.findByColId(col.get());
     }
-
 }
 

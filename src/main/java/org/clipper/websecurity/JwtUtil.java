@@ -11,10 +11,15 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
+import jakarta.servlet.http.HttpServletRequest;
 
 @Service
 public class JwtUtil {
+    private final String TOKEN_HEADER = "Authorization";
+    private final String TOKEN_PREFIX = "Bearer ";
+
     SecretKey key = Jwts.SIG.HS256.key().build();
 
     public String extractUsername(String token) {
@@ -46,11 +51,23 @@ public class JwtUtil {
     private String createToken(Map<String, Object> claims, String subject) {
         return Jwts.builder().claims(claims).subject(subject).issuedAt(new Date(System.currentTimeMillis()))
             .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60))
+            .signWith(key, Jwts.SIG.HS256)
             .compact();
     }
 
-    public boolean validateToken(String token, UserDetails userDeets) {
-        final String username = extractUsername(token);
-        return (username.equals(userDeets.getUsername())) && !isTokenExpired(token);
+    public Claims validateClaims(String token)
+            throws JwtException {
+        if (isTokenExpired(token)) {
+            throw new JwtException(token);
+        }
+        return extractAllClaims(token);
+    }
+
+    public String resolveToken(HttpServletRequest req) {
+        String bearerToken = req.getHeader(TOKEN_HEADER);
+        if (bearerToken != null && bearerToken.startsWith(TOKEN_PREFIX)) {
+            return bearerToken.substring(TOKEN_PREFIX.length());
+        }
+        return null;
     }
 }

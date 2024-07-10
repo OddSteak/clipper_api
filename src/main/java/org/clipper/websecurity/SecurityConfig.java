@@ -10,49 +10,48 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
     @Autowired
-    public UserDetailsServiceImpl userDetailsService;
+    public UserDetailsServiceImpl userDetailsServiceImpl;
+
+    @Autowired
+    public PasswordEncoder passwordEncoder;
+
+    @Autowired
+    public JwtTokenFilter jwtTokenFilter;
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .cors(AbstractHttpConfigurer::disable)
                 .csrf(AbstractHttpConfigurer::disable)
-                .userDetailsService(username -> userDetailsService.loadUserByUsername(username))
+                .userDetailsService(username -> userDetailsServiceImpl.loadUserByUsername(username))
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .formLogin(AbstractHttpConfigurer::disable)
                 .securityMatcher("/api/**")
                 .authorizeHttpRequests((requests) -> requests
-                        .requestMatchers("/", "/api/auth").permitAll() // allow these without authentication
+                        .requestMatchers("/", "/auth").permitAll() // allow these without authentication
                         .anyRequest().authenticated() // any request that isn't explicitly allowed will need to be
                                                       // authenticated
                 )
+                .addFilterBefore(jwtTokenFilter, UsernamePasswordAuthenticationFilter.class)
                 .logout((logout) -> logout.permitAll());
 
         return http.build(); // builds and returns the securityFilterChain
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(
-            UserDetailsServiceImpl userDetailsService,
-            PasswordEncoder passwordEncoder) {
+    AuthenticationManager authenticationManager() {
         DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider();
-        authenticationProvider.setUserDetailsService(userDetailsService);
+        authenticationProvider.setUserDetailsService(userDetailsServiceImpl);
         authenticationProvider.setPasswordEncoder(passwordEncoder);
 
         return new ProviderManager(authenticationProvider);
     }
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
 }
-

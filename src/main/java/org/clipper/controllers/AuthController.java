@@ -5,6 +5,7 @@ import org.clipper.models.AuthResponse;
 import org.clipper.websecurity.JwtUtil;
 import org.clipper.websecurity.UserDetailsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -33,6 +34,7 @@ public class AuthController {
                     // standard token spring mvc uses for username and password
                     new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword()));
         } catch (BadCredentialsException e) {
+            ResponseEntity.status(HttpStatus.BAD_REQUEST).body("invalid username or password");
             throw new Exception("incorrect username or password", e);
         }
 
