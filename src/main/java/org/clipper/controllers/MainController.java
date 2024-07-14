@@ -4,7 +4,6 @@ import java.util.Optional;
 
 import org.clipper.accessdb.*;
 import org.clipper.exceptions.*;
-import org.clipper.websecurity.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -85,19 +84,22 @@ public class MainController {
     }
 
     @PostMapping(path = "/addcollection")
-    public @ResponseBody String addNewCollection(@RequestParam String name, String user_id, String access) {
-        Optional<User> u = userRepository.findById(user_id);
+    public @ResponseBody String addNewCollection(@RequestParam String colName, String access)
+            throws Exception {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+        Optional<User> u = userRepository.findById(username);
         ColAccess acc;
 
         if (!u.isPresent())
-            throw new GenericNotFoundException(String.format("user '%s' doesn't exist", user_id));
+            throw new Exception(String.format("user '%s' doesn't exist", username));
         try {
             acc = ColAccess.valueOf(access);
         } catch (IllegalArgumentException e) {
             return "invalid access modifier";
         }
 
-        LinkCollection col = new LinkCollection(u.get(), name, acc);
+        LinkCollection col = new LinkCollection(u.get(), colName, acc);
         collectionRepository.save(col);
         collectionUsersRepository.save(new CollectionUsers(u.get(), col));
         return "Saved";

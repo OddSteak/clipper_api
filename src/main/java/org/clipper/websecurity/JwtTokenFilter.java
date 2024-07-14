@@ -25,13 +25,13 @@ import jakarta.servlet.http.HttpServletResponse;
 public class JwtTokenFilter extends OncePerRequestFilter {
     @Autowired
     private JwtUtil jwtUtil;
+
     @Autowired
     private ObjectMapper mapper;
 
     @Override
     public void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws IOException, ServletException {
-        HashMap<String, Object> errorObj = new HashMap<>();
 
         try {
             String token = jwtUtil.resolveToken(request);
@@ -46,6 +46,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
         } catch (Exception e) {
+            HashMap<String, Object> errorObj = new HashMap<>();
             errorObj.put("message", "authentication error");
             errorObj.put("details", e.getMessage());
             response.setStatus(HttpStatus.FORBIDDEN.value());
